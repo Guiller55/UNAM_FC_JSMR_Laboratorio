@@ -1,0 +1,76 @@
+# Algoritmo: Red Neuronal Convolucional (CNN)
+
+## 1. Capa de Convolución
+   
+### INICIALIZAR(num_filtros, tamaño_kernel)
+* Guardar cantidad de filtros y su tamaño.
+* Crear los filtros con valores aleatorios (normalizados por el tamaño del kernel).
+
+### FORWARD(imagen)
+1. Obtener alto y ancho de la imagen.
+2. Crear matriz de **SALIDA** con dimensiones: `(alto - kernel + 1, ancho - kernel + 1, num_filtros)`.
+3. **POR CADA** fila `i` y columna `j` donde quepa el kernel:
+   * Extraer la **REGION** de la imagen de tamaño `(kernel x kernel)`.
+   * **POR CADA** filtro:
+     * Multiplicar cada píxel de la **REGION** por el valor correspondiente del filtro.
+     * **SUMAR** todos esos productos.
+     * Guardar el resultado en `SALIDA[i, j, filtro]`.
+4. **DEVOLVER** SALIDA.
+
+### BACKWARD(gradiente_error, tasa_aprendizaje)
+1. Crear matriz vacía para guardar los cambios en los filtros (`d_L_d_filtros`).
+2. **POR CADA** región procesada en el paso anterior:
+   * Multiplicar la **REGION** por el gradiente recibido.
+   * Acumular el resultado en `d_L_d_filtros`.
+3. **ACTUALIZAR**: `filtros = filtros - (tasa_aprendizaje * d_L_d_filtros)`.
+
+---
+
+## 2. Capa de Max Pooling
+   
+### INICIALIZAR(tamaño_pool)
+* Definir el tamaño de la ventana de reducción (ej. 2x2).
+
+### FORWARD(entrada)
+1. Calcular dimensiones de salida dividiendo alto y ancho entre `tamaño_pool`.
+2. Crear matriz de **SALIDA** vacía.
+3. **POR CADA** bloque de tamaño `(pool x pool)` en la entrada:
+   * **POR CADA** canal (filtro):
+     * Encontrar el **VALOR MÁXIMO** dentro de ese bloque.
+     * Guardar el **VALOR MÁXIMO** en la posición correspondiente de **SALIDA**.
+4. **DEVOLVER** SALIDA.
+
+---
+
+## 3. Capa Densa (Softmax)
+
+### INICIALIZAR(num_entradas, num_nodos)
+* Crear matriz de **PESOS** `(num_entradas x num_nodos)` en ceros.
+* Crear vector de **BIASES** en ceros.
+
+### FORWARD(entrada)
+1. **APLANAR**: Convertir la matriz 3D del pooling en un vector de una dimensión.
+2. **CALCULAR**: `Totales = (entrada_plana * pesos) + biases`.
+3. **APLICAR SOFTMAX**:
+   * Calcular **Exponencial** de cada valor en `Totales`.
+   * **PROBABILIDADES** = `Exponencial / Suma de todas las exponenciales`.
+4. **DEVOLVER** PROBABILIDADES (Vector que suma 1.0).
+
+---
+
+## 4. Función de Pérdida (Cross-Entropy)
+
+### CALCULAR(probabilidades, etiqueta_real)
+* **PERDIDA** = `- logaritmo(probabilidad de la clase correcta)`.
+* **DEVOLVER** PERDIDA.
+
+---
+
+## 5. Flujo de Ejecución (Main)
+
+1. **CARGAR** imagen y su clase real.
+2. **PASAR** imagen por **CONVOLUCIÓN** -> Obtener mapas de características.
+3. **PASAR** mapas por **POOLING** -> Reducir dimensiones.
+4. **PASAR** datos reducidos por **SOFTMAX** -> Obtener predicción.
+5. **COMPARAR** predicción con clase real -> Obtener **PÉRDIDA**.
+6. **ACTUALIZAR** pesos y filtros usando el error (Entrenamiento).
